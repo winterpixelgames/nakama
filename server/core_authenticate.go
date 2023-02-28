@@ -318,6 +318,7 @@ func AuthenticateEmail(ctx context.Context, logger *zap.Logger, db *sql.DB, emai
 		// Check if password matches.
 		err = bcrypt.CompareHashAndPassword(dbPassword, []byte(password))
 		if err != nil {
+			logger.Info("Invalid password.", zap.Error(err), zap.String("email", email), zap.String("username", username), zap.Bool("create", create))
 			return "", "", false, status.Error(codes.Unauthenticated, "Invalid credentials.")
 		}
 
@@ -326,6 +327,7 @@ func AuthenticateEmail(ctx context.Context, logger *zap.Logger, db *sql.DB, emai
 
 	if !create {
 		// No user account found, and creation is not allowed.
+		logger.Info("User account not found.", zap.String("email", email), zap.String("username", username), zap.Bool("create", create))
 		return "", "", false, status.Error(codes.NotFound, "User account not found.")
 	}
 
