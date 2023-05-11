@@ -21,6 +21,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/heroiclabs/nakama-common/api"
@@ -469,13 +470,16 @@ func ExportAccount(ctx context.Context, logger *zap.Logger, db *sql.DB, userID u
 	return export, nil
 }
 
-func DeleteAccount(ctx context.Context, logger *zap.Logger, db *sql.DB, userID uuid.UUID, recorded bool) error {
+func DeleteAccount(ctx context.Context, logger *zap.Logger, db *sql.DB, config Config, leaderboardRankCache LeaderboardRankCache, sessionRegistry SessionRegistry, sessionCache SessionCache, tracker Tracker, userID uuid.UUID, recorded bool) error {
+	ts := time.Now().UTC().Unix()
+
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Error("Could not begin database transaction.", zap.Error(err))
 		return err
 	}
 
+	var deleted bool
 	if err := ExecuteInTx(ctx, tx, func() error {
 		count, err := DeleteUser(ctx, tx, userID)
 		if err != nil {
@@ -486,7 +490,7 @@ func DeleteAccount(ctx context.Context, logger *zap.Logger, db *sql.DB, userID u
 			return nil
 		}
 
-		err = LeaderboardRecordsDeleteAll(ctx, logger, tx, userID)
+		err = LeaderboardRecordsDeleteAll(ctx, logger, leaderboardRankCache, tx, userID, ts)
 		if err != nil {
 			logger.Debug("Could not delete leaderboard records.", zap.Error(err), zap.String("user_id", userID.String()))
 			return err
@@ -506,10 +510,24 @@ func DeleteAccount(ctx context.Context, logger *zap.Logger, db *sql.DB, userID u
 			}
 		}
 
+		deleted = true
+
 		return nil
 	}); err != nil {
 		logger.Error("Error occurred while trying to delete the user.", zap.Error(err), zap.String("user_id", userID.String()))
 		return err
+	}
+
+	if deleted {
+		// Logout and disconnect.
+		if err = SessionLogout(config, sessionCache, userID, "", ""); err != nil {
+			return err
+		}
+		for _, presence := range tracker.ListPresenceIDByStream(PresenceStream{Mode: StreamModeNotifications, Subject: userID}) {
+			if err = sessionRegistry.Disconnect(ctx, presence.SessionID, false); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

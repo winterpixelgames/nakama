@@ -155,7 +155,7 @@ type LeaderboardCache interface {
 	CreateTournament(ctx context.Context, id string, authoritative bool, sortOrder, operator int, resetSchedule, metadata, title, description string, category, startTime, endTime, duration, maxSize, maxNumScore int, joinRequired bool) (*Leaderboard, error)
 	InsertTournament(id string, authoritative bool, sortOrder, operator int, resetSchedule, metadata, title, description string, category, duration, maxSize, maxNumScore int, joinRequired bool, createTime, startTime, endTime int64)
 	ListTournaments(now int64, categoryStart, categoryEnd int, startTime, endTime int64, limit int, cursor *TournamentListCursor) ([]*Leaderboard, *TournamentListCursor, error)
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, rankCache LeaderboardRankCache, scheduler LeaderboardScheduler, id string) error
 	Remove(id string)
 }
 
@@ -302,13 +302,13 @@ func (l *LocalLeaderboardCache) GetAllLeaderboards() []*Leaderboard {
 }
 
 func (l *LocalLeaderboardCache) Create(ctx context.Context, id string, authoritative bool, sortOrder, operator int, resetSchedule, metadata string) (*Leaderboard, error) {
-	l.Lock()
+	l.RLock()
 	if leaderboard, ok := l.leaderboards[id]; ok {
 		// Creation is an idempotent operation.
-		l.Unlock()
+		l.RUnlock()
 		return leaderboard, nil
 	}
-	l.Unlock()
+	l.RUnlock()
 
 	var expr *cronexpr.Expression
 	var err error
@@ -672,7 +672,7 @@ func (l *LocalLeaderboardCache) ListTournaments(now int64, categoryStart, catego
 	return list, newCursor, nil
 }
 
-func (l *LocalLeaderboardCache) Delete(ctx context.Context, id string) error {
+func (l *LocalLeaderboardCache) Delete(ctx context.Context, rankCache LeaderboardRankCache, scheduler LeaderboardScheduler, id string) error {
 	l.Lock()
 	leaderboard, leaderboardFound := l.leaderboards[id]
 	l.Unlock()
@@ -680,6 +680,15 @@ func (l *LocalLeaderboardCache) Delete(ctx context.Context, id string) error {
 	if !leaderboardFound {
 		// Deletion is an idempotent operation.
 		return nil
+	}
+
+	now := time.Now().UTC()
+	var expiryUnix int64
+	if leaderboard.ResetSchedule != nil {
+		expiryUnix = leaderboard.ResetSchedule.Next(now).UTC().Unix()
+	}
+	if leaderboard.EndTime > 0 && expiryUnix > leaderboard.EndTime {
+		expiryUnix = leaderboard.EndTime
 	}
 
 	// Delete from database first.
@@ -713,6 +722,14 @@ func (l *LocalLeaderboardCache) Delete(ctx context.Context, id string) error {
 		}
 	}
 	l.Unlock()
+
+	scheduler.Update()
+
+	if expiryUnix > now.Unix() {
+		// Clear any cached ranks that have not yet expired.
+		rankCache.DeleteLeaderboard(id, expiryUnix)
+	}
+
 	return nil
 }
 

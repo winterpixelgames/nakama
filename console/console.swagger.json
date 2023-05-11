@@ -25,29 +25,6 @@
     "application/json"
   ],
   "paths": {
-    "/v2/console/all": {
-      "delete": {
-        "summary": "Deletes all data",
-        "operationId": "Console_DeleteAllData",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "properties": {}
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/googlerpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "Console"
-        ]
-      }
-    },
     "/v2/console/account": {
       "get": {
         "summary": "List (and optionally filter) accounts.",
@@ -83,7 +60,7 @@
           },
           {
             "name": "cursor",
-            "description": "Cursor to start from.",
+            "description": "Cursor to start from",
             "in": "query",
             "required": false,
             "type": "string"
@@ -100,6 +77,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -143,7 +121,7 @@
           },
           {
             "name": "limit",
-            "description": "Max number of results per page.",
+            "description": "Max number of results per page",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -151,7 +129,7 @@
           },
           {
             "name": "cursor",
-            "description": "Cursor to retrieve a page of records from.",
+            "description": "Cursor to retrieve a page of records from",
             "in": "query",
             "required": false,
             "type": "string"
@@ -200,6 +178,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -237,6 +216,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -331,6 +311,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -427,6 +408,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -498,6 +480,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -537,6 +520,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -569,6 +553,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -601,6 +586,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -633,6 +619,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -680,6 +667,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -712,6 +700,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -744,6 +733,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -776,6 +766,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -808,6 +799,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -840,6 +832,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -872,6 +865,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -898,6 +892,30 @@
             "type": "string"
           }
         ],
+        "tags": [
+          "Console"
+        ]
+      }
+    },
+    "/v2/console/all": {
+      "delete": {
+        "summary": "Deletes all data",
+        "operationId": "Console_DeleteAllData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
         "tags": [
           "Console"
         ]
@@ -1043,6 +1061,7 @@
         "parameters": [
           {
             "name": "body",
+            "description": "Authenticate a console user with username and password.",
             "in": "body",
             "required": true,
             "schema": {
@@ -1057,6 +1076,114 @@
           {
             "": []
           }
+        ]
+      }
+    },
+    "/v2/console/authenticate/logout": {
+      "post": {
+        "summary": "Log out a session and invalidate the session token.",
+        "operationId": "Console_AuthenticateLogout",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Log out a session and invalidate a session token.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/consoleAuthenticateLogoutRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Console"
+        ]
+      }
+    },
+    "/v2/console/channel": {
+      "get": {
+        "summary": "List channel messages with the selected filter",
+        "operationId": "Console_ListChannelMessages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiChannelMessageList"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "description": "Type of the chat channel",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "ROOM",
+              "GROUP",
+              "DIRECT"
+            ],
+            "default": "UNKNOWN"
+          },
+          {
+            "name": "label",
+            "description": "Label of the channel, if a standard chat room",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "group_id",
+            "description": "Group ID of the channel, if a group chat",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "user_id_one",
+            "description": "User IDs, if a direct chat",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "user_id_two",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "cursor",
+            "description": "Cursor to start from",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Console"
         ]
       }
     },
@@ -1111,7 +1238,7 @@
           },
           {
             "name": "cursor",
-            "description": "Cursor to start from.",
+            "description": "Cursor to start from",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1130,6 +1257,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -1169,6 +1297,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -1193,6 +1322,58 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "Console"
+        ]
+      }
+    },
+    "/v2/console/group/{group_id}/add": {
+      "post": {
+        "summary": "Add/join members to a group.",
+        "operationId": "Console_AddGroupUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "group_id",
+            "description": "ID of the group to add them to.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ids": {
+                  "type": "string",
+                  "description": "Users to add/join."
+                },
+                "join_request": {
+                  "type": "boolean",
+                  "description": "Whether it is a join request."
+                }
+              },
+              "description": "Add/join users to a group."
+            }
           }
         ],
         "tags": [
@@ -1238,6 +1419,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -1268,6 +1450,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -1457,6 +1640,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -1489,6 +1673,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -1594,7 +1779,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/apiMatchList"
+              "$ref": "#/definitions/nakamaconsoleMatchList"
             }
           },
           "default": {
@@ -1615,7 +1800,7 @@
           },
           {
             "name": "authoritative",
-            "description": "Authoritative or relayed matches.",
+            "description": "Authoritative or relayed matches, or null for both.",
             "in": "query",
             "required": false,
             "type": "boolean"
@@ -1644,8 +1829,22 @@
             "format": "int32"
           },
           {
+            "name": "match_id",
+            "description": "Match ID.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "query",
             "description": "Arbitrary label query.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "node",
+            "description": "Node name filter, optional.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1688,6 +1887,50 @@
         ]
       }
     },
+    "/v2/console/message": {
+      "delete": {
+        "summary": "Delete messages.",
+        "operationId": "Console_DeleteChannelMessages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/consoleDeleteChannelMessagesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "before",
+            "description": "Timestamp before which messages will be deleted.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "ids",
+            "description": "IDs of the messages to delete.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "Console"
+        ]
+      }
+    },
     "/v2/console/purchase": {
       "get": {
         "summary": "List validated purchases",
@@ -1709,14 +1952,14 @@
         "parameters": [
           {
             "name": "user_id",
-            "description": "User ID to filter purchases for.",
+            "description": "User ID to filter purchases for",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "limit",
-            "description": "Max number of results per page.",
+            "description": "Max number of results per page",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1724,7 +1967,7 @@
           },
           {
             "name": "cursor",
-            "description": "Cursor to retrieve a page of records from.",
+            "description": "Cursor to retrieve a page of records from",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1809,21 +2052,21 @@
           },
           {
             "name": "key",
-            "description": "Key to filter objects for.",
+            "description": "Key to filter objects for",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "collection",
-            "description": "Collection name to filter objects for.",
+            "description": "Collection name to filter objects for",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "cursor",
-            "description": "Cursor to retrieve a page of records from.",
+            "description": "Cursor to retrieve a page of records from",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1840,6 +2083,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -1930,6 +2174,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -2056,6 +2301,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -2101,6 +2347,53 @@
         ]
       }
     },
+    "/v2/console/subscription": {
+      "get": {
+        "summary": "List validated subscriptions",
+        "operationId": "Console_ListSubscriptions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiSubscriptionList"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "description": "UserID to filter subscriptions for",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Max number of results per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "cursor",
+            "description": "Cursor to retrieve a page of records from",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Console"
+        ]
+      }
+    },
     "/v2/console/user": {
       "get": {
         "summary": "List (and optionally filter) users.",
@@ -2130,6 +2423,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -2160,6 +2454,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
+              "type": "object",
               "properties": {}
             }
           },
@@ -2246,28 +2541,6 @@
       },
       "description": "A single group-role pair."
     },
-    "ValidatedPurchaseEnvironment": {
-      "type": "string",
-      "enum": [
-        "UNKNOWN",
-        "SANDBOX",
-        "PRODUCTION"
-      ],
-      "default": "UNKNOWN",
-      "description": "- UNKNOWN: Unknown environment.\n - SANDBOX: Sandbox/test environment.\n - PRODUCTION: Production environment.",
-      "title": "Environment where the purchase took place"
-    },
-    "ValidatedPurchaseStore": {
-      "type": "string",
-      "enum": [
-        "APPLE_APP_STORE",
-        "GOOGLE_PLAY_STORE",
-        "HUAWEI_APP_GALLERY"
-      ],
-      "default": "APPLE_APP_STORE",
-      "description": "- APPLE_APP_STORE: Apple App Store\n - GOOGLE_PLAY_STORE: Google Play Store\n - HUAWEI_APP_GALLERY: Huawei App Gallery",
-      "title": "Validation Provider"
-    },
     "apiAccountDevice": {
       "type": "object",
       "properties": {
@@ -2345,6 +2618,31 @@
         }
       },
       "description": "A message sent on a channel."
+    },
+    "apiChannelMessageList": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiChannelMessage"
+          },
+          "description": "A list of messages."
+        },
+        "next_cursor": {
+          "type": "string",
+          "description": "The cursor to send when retrieving the next page, if any."
+        },
+        "prev_cursor": {
+          "type": "string",
+          "description": "The cursor to send when retrieving the previous page, if any."
+        },
+        "cacheable_cursor": {
+          "type": "string",
+          "description": "Cacheable cursor to list newer messages. Durable and designed to be stored, unlike next/prev cursors."
+        }
+      },
+      "description": "A list of channel messages, usually a result of a list operation."
     },
     "apiFriend": {
       "type": "object",
@@ -2548,19 +2846,6 @@
       },
       "description": "A set of leaderboard records, may be part of a leaderboard records page or a batch of individual records."
     },
-    "apiMatchList": {
-      "type": "object",
-      "properties": {
-        "matches": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/nakamaapiMatch"
-          },
-          "description": "A number of matches corresponding to a list operation."
-        }
-      },
-      "description": "A list of realtime matches."
-    },
     "apiNotification": {
       "type": "object",
       "properties": {
@@ -2613,7 +2898,7 @@
         },
         "prev_cursor": {
           "type": "string",
-          "description": "The cursor to send when retrieving the next page, if any."
+          "description": "The cursor to send when retrieving the previous page, if any."
         }
       },
       "description": "A list of validated purchases stored by Nakama."
@@ -2686,6 +2971,49 @@
       },
       "description": "A storage acknowledgement."
     },
+    "apiStoreEnvironment": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "SANDBOX",
+        "PRODUCTION"
+      ],
+      "default": "UNKNOWN",
+      "description": "- UNKNOWN: Unknown environment.\n - SANDBOX: Sandbox/test environment.\n - PRODUCTION: Production environment.",
+      "title": "Environment where a purchase/subscription took place,"
+    },
+    "apiStoreProvider": {
+      "type": "string",
+      "enum": [
+        "APPLE_APP_STORE",
+        "GOOGLE_PLAY_STORE",
+        "HUAWEI_APP_GALLERY"
+      ],
+      "default": "APPLE_APP_STORE",
+      "description": "- APPLE_APP_STORE: Apple App Store\n - GOOGLE_PLAY_STORE: Google Play Store\n - HUAWEI_APP_GALLERY: Huawei App Gallery",
+      "title": "Validation Provider,"
+    },
+    "apiSubscriptionList": {
+      "type": "object",
+      "properties": {
+        "validated_subscriptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiValidatedSubscription"
+          },
+          "description": "Stored validated subscriptions."
+        },
+        "cursor": {
+          "type": "string",
+          "description": "The cursor to send when retrieving the next page, if any."
+        },
+        "prev_cursor": {
+          "type": "string",
+          "description": "The cursor to send when retrieving the previous page, if any."
+        }
+      },
+      "description": "A list of validated subscriptions stored by Nakama."
+    },
     "apiUserGroupList": {
       "type": "object",
       "properties": {
@@ -2706,6 +3034,10 @@
     "apiValidatedPurchase": {
       "type": "object",
       "properties": {
+        "user_id": {
+          "type": "string",
+          "description": "Purchase User ID."
+        },
         "product_id": {
           "type": "string",
           "description": "Purchase Product ID."
@@ -2715,7 +3047,61 @@
           "description": "Purchase Transaction ID."
         },
         "store": {
-          "$ref": "#/definitions/ValidatedPurchaseStore",
+          "$ref": "#/definitions/apiStoreProvider",
+          "title": "Store identifier"
+        },
+        "purchase_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the purchase was done."
+        },
+        "create_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the receipt validation was stored in DB."
+        },
+        "update_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the receipt validation was updated in DB."
+        },
+        "refund_time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Timestamp when the purchase was refunded. Set to UNIX"
+        },
+        "provider_response": {
+          "type": "string",
+          "description": "Raw provider validation response."
+        },
+        "environment": {
+          "$ref": "#/definitions/apiStoreEnvironment",
+          "description": "Whether the purchase was done in production or sandbox environment."
+        },
+        "seen_before": {
+          "type": "boolean",
+          "description": "Whether the purchase had already been validated by Nakama before."
+        }
+      },
+      "description": "Validated Purchase stored by Nakama."
+    },
+    "apiValidatedSubscription": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "description": "Subscription User ID."
+        },
+        "product_id": {
+          "type": "string",
+          "description": "Purchase Product ID."
+        },
+        "original_transaction_id": {
+          "type": "string",
+          "description": "Purchase Original transaction ID (we only keep track of the original subscription, not subsequent renewals)."
+        },
+        "store": {
+          "$ref": "#/definitions/apiStoreProvider",
           "title": "Store identifier"
         },
         "purchase_time": {
@@ -2733,20 +3119,33 @@
           "format": "date-time",
           "description": "UNIX Timestamp when the receipt validation was updated in DB."
         },
-        "provider_response": {
-          "type": "string",
-          "description": "Raw provider validation response."
-        },
         "environment": {
-          "$ref": "#/definitions/ValidatedPurchaseEnvironment",
+          "$ref": "#/definitions/apiStoreEnvironment",
           "description": "Whether the purchase was done in production or sandbox environment."
         },
-        "seen_before": {
+        "expiry_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Subscription expiration time. The subscription can still be auto-renewed to extend the expiration time further."
+        },
+        "refund_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Subscription refund time. If this time is set, the subscription was refunded."
+        },
+        "provider_response": {
+          "type": "string",
+          "description": "Raw provider validation response body."
+        },
+        "provider_notification": {
+          "type": "string",
+          "description": "Raw provider notification body."
+        },
+        "active": {
           "type": "boolean",
-          "description": "Whether the purchase had already been validated by Nakama before."
+          "description": "Whether the subscription is currently active or not."
         }
-      },
-      "description": "Validated Purchase stored by Nakama."
+      }
     },
     "consoleAccountExport": {
       "type": "object",
@@ -2885,6 +3284,16 @@
       },
       "title": "API Explorer List of Endpoints"
     },
+    "consoleAuthenticateLogoutRequest": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "description": "Session token to log out."
+        }
+      },
+      "description": "Log out a session and invalidate a session token."
+    },
     "consoleAuthenticateRequest": {
       "type": "object",
       "properties": {
@@ -2942,6 +3351,16 @@
       },
       "description": "A console user session."
     },
+    "consoleDeleteChannelMessagesResponse": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "string",
+          "format": "int64",
+          "description": "Total number of messages deleted."
+        }
+      }
+    },
     "consoleGroupExport": {
       "type": "object",
       "properties": {
@@ -2958,6 +3377,29 @@
         }
       },
       "description": "An export of all information stored for a group."
+    },
+    "consoleListChannelMessagesRequestType": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "ROOM",
+        "GROUP",
+        "DIRECT"
+      ],
+      "default": "UNKNOWN"
+    },
+    "consoleMatchListMatch": {
+      "type": "object",
+      "properties": {
+        "api_match": {
+          "$ref": "#/definitions/nakamaapiMatch",
+          "title": "The API match"
+        },
+        "node": {
+          "type": "string",
+          "title": "The node name"
+        }
+      }
     },
     "consoleMatchState": {
       "type": "object",
@@ -3541,6 +3983,16 @@
         "tournament": {
           "type": "boolean",
           "description": "Tournament."
+        },
+        "prev_reset": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The UNIX time when the tournament was last reset. A computed value."
+        },
+        "next_reset": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The UNIX time when the tournament is next playable. A computed value."
         }
       },
       "description": "A leaderboard."
@@ -3557,6 +4009,18 @@
         }
       },
       "description": "A list of leaderboards."
+    },
+    "nakamaconsoleMatchList": {
+      "type": "object",
+      "properties": {
+        "matches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/consoleMatchListMatch"
+          }
+        }
+      },
+      "description": "A list of realtime matches, with their node names."
     },
     "protobufAny": {
       "type": "object",
