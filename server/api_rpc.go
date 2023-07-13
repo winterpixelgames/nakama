@@ -62,6 +62,18 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 			}
 			return
 		}
+	} else if customHttpAuth := r.Header["X-Nakama-Http-Auth"]; len(customHttpAuth) >= 1 {
+		httpKey = customHttpAuth[0]
+		if httpKey != s.config.GetRuntime().HTTPKey {
+			// HTTP key did not match.
+			w.Header().Set("content-type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			_, err := w.Write(httpKeyInvalidBytes)
+			if err != nil {
+				s.logger.Debug("Error writing response to client", zap.Error(err))
+			}
+			return
+		}
 	} else if auth := r.Header["Authorization"]; len(auth) >= 1 {
 		var token string
 		userID, username, vars, expiry, token, isTokenAuth = parseBearerAuth([]byte(s.config.GetSession().EncryptionKey), auth[0])
