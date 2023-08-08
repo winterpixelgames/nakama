@@ -241,7 +241,7 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 			w.Header().Set("content-type", contentType[0])
 		} else {
 			// Don't know payload content-type.
-			w.Header().Set("content-type", "text/plain")
+			w.Header().Set("content-type", "text/html")
 		}
 	} else {
 		// Fall back to default response content type application/json.
