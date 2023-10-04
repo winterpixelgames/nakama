@@ -29,7 +29,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/heroiclabs/nakama-common/api"
-	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/heroiclabs/nakama/v3/iap"
 	"github.com/jackc/pgtype"
 	"go.uber.org/zap"
@@ -644,31 +643,4 @@ RETURNING
 
 func parseMillisecondUnixTimestamp(t int64) time.Time {
 	return time.Unix(0, 0).Add(time.Duration(t) * time.Millisecond)
-}
-
-type StoragePurchaseRecord struct {
-	UserID        uuid.UUID
-	StoreInt      int32
-	ProductId     string
-	TransactionId string
-	RawResponse   string
-	PurchaseTime  time.Time
-	RefundTime    time.Time
-	Environment   api.StoreEnvironment
-}
-
-func InsertPurchaseRecord(ctx context.Context, logger runtime.Logger, db *sql.DB, p *StoragePurchaseRecord) error {
-
-	sPurchase := &storagePurchase{
-		userID:        p.UserID,
-		store:         api.StoreProvider(p.StoreInt),
-		productId:     p.ProductId,
-		transactionId: p.TransactionId,
-		rawResponse:   p.RawResponse,
-		purchaseTime:  p.PurchaseTime,
-		environment:   p.Environment,
-	}
-
-	_, err := upsertPurchases(ctx, db, []*storagePurchase{sPurchase})
-	return err
 }
