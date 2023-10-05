@@ -67,6 +67,9 @@ export class PurchasesComponent implements OnInit {
   }
 
   formatStoreText(label: string): string {
+	if(label === undefined) {
+		return "unknown";
+	}
     return label.split('_').map(s => s[0] + s.slice(1).toLowerCase()).join(' ');
   }
 }
