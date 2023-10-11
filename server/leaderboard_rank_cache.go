@@ -114,6 +114,11 @@ func NewLocalLeaderboardRankCache(ctx context.Context, startupLogger *zap.Logger
 		return cache
 	}
 
+	// Actually fill blacklistIds..
+	for _, blackListLeaderboard := range config.BlacklistRankCache {
+		cache.blacklistIds[blackListLeaderboard] = struct{}{}
+	}
+
 	startupLogger.Info("Initializing leaderboard rank cache")
 
 	nowTime := time.Now().UTC()
