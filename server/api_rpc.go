@@ -17,7 +17,7 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -52,6 +52,18 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 	var vars map[string]string
 	var expiry int64
 	if httpKey := queryParams.Get("http_key"); httpKey != "" {
+		if httpKey != s.config.GetRuntime().HTTPKey {
+			// HTTP key did not match.
+			w.Header().Set("content-type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			_, err := w.Write(httpKeyInvalidBytes)
+			if err != nil {
+				s.logger.Debug("Error writing response to client", zap.Error(err))
+			}
+			return
+		}
+	} else if customHttpAuth := r.Header["X-Nakama-Http-Auth"]; len(customHttpAuth) >= 1 {
+		httpKey = customHttpAuth[0]
 		if httpKey != s.config.GetRuntime().HTTPKey {
 			// HTTP key did not match.
 			w.Header().Set("content-type", "application/json")
@@ -127,7 +139,7 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 	// Prepare input to function.
 	var payload string
 	if r.Method == "POST" {
-		b, err := ioutil.ReadAll(r.Body)
+		b, err := io.ReadAll(r.Body)
 		if err != nil {
 			// Request body too large.
 			if err.Error() == "http: request body too large" {
@@ -229,7 +241,7 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 			w.Header().Set("content-type", contentType[0])
 		} else {
 			// Don't know payload content-type.
-			w.Header().Set("content-type", "text/plain")
+			w.Header().Set("content-type", "text/html")
 		}
 	} else {
 		// Fall back to default response content type application/json.

@@ -3,6 +3,114 @@ All notable changes to this project are documented below.
 
 The format is based on [keep a changelog](http://keepachangelog.com) and this project uses [semantic versioning](http://semver.org).
 
+## [Unreleased]
+### Added
+- Add tournament record delete runtime functions and API.
+- Add insecure flag to runtime http functions to optionally skip TLS checks.
+
+### Changed
+- Improve graceful shutdown of Google IAP receipt processor.
+- If In-App Purchases validation contain mismatching userIDs, do not return an error.
+- Better handling of matchmaker operations while the interval process is running.
+- Add userID param to Go runtime GroupUpdate function.
+
+### Fixed
+- Consistent validation of override operator in runtime leaderboard record writes.
+- Correctly filter open/closed groups in the listing API.
+- Ensure direct message channel message listing is correctly scoped to participants only.
+
+## [3.15.0] - 2023-01-04
+### Added
+- Allow the socket acceptor to read session tokens from request headers.
+- Add support for custom response headers set in server configuration.
+- Add missing fields to tournament end and reset JavaScript server framework hooks.
+- Add support for removing channel messages to all server runtimes.
+- Allow Console group UI view to add new members.
+- Allow "DELETE" and "HEAD" methods in server framework HTTP request functions.
+- Add In-App Purchase notification callback functions to all server runtimes.
+- Add "DeleteAccount" client API function.
+- Add "DeleteAccount" before and after hook functions to all server runtimes.
+
+### Changed
+- Use stricter validation of limit param in server framework storage list operations.
+- Allow newer subdomain variant in Facebook Limited Login token issuer field.
+- Rename "groupsGetRandom" to "groups_get_random" in the Lua server framework for consistency.
+- Accept Google IAP receipts with or without Unity wrapper structures.
+- Update Nakama logos.
+- Use stricter validation of method param in Lua server framework HTTP request function.
+- Disable SQL statement cache mode describe by default. This reverts to the same behaviour as before 3.14.0 release.
+- Build with Go 1.19.4 release.
+- Always log out and disconnect a user when it's deleted.
+
+### Fixed
+- Fix response structure in purchase lookups by identifier.
+- Ensure corresponding leaderboard rank cache entries are removed when a user is deleted.
+- Update scheduler when leaderboards and tournaments are deleted from the Console.
+- Fix matchmaker tracking of eligible matches when downsizing for count multiples.
+- Handle context cancellation in "httpRequest" calls in the JavaScript server framework.
+- Handle context cancellation in "httpRequest" calls in the Lua server framework.
+- Fix logic on users who attempt to leave groups they're banned from.
+- Fix logic in optional params in JavaScript server framework token generate function.
+- Validate group member count so it does not update when failing to add a member.
+- Handle Google IAP validation token caching when using credential overrides.
+- More graceful handling of no-op authoritative storage delete operations.
+- Ensure rank cache is correctly updated when joining tournaments.
+- Ensure default parameters for tournament listings are consistent between API and runtimes.
+- Fix Console groups view incorrect visual removal of last group member.
+- Fix In-App Purchase subscription notification handling.
+- Fix handling of party leader transition if previous leader and other members leave concurrently.
+- Fix exact enforcement of maximum party size.
+
+## [3.14.0] - 2022-10-14
+### Added
+- Add new GroupsGetRandom function to the runtimes.
+
+### Changed
+- More consistent signature and handling between JavaScript runtime Base64 encode functions.
+- Improve group list cursor handling for messages with close timestamps.
+- Improve handling of database connections going through proxies.
+- Improve extraction of purchases and subscriptions from Apple receipts.
+- Improve signature of JavaScript runtime Base64 decode functions.
+- Improve signature of JavaScript runtime Base16 encode and decode functions.
+- Token and credentials as inputs on unlink operations are now optional.
+- Improve runtime IAP operation errors to include provider payload in error message.
+- Build with Go 1.19.2 release.
+- Disconnect users when they are banned from the console or runtime functions.
+
+### Fixed
+- Observe the error if returned in storage list errors in JavaScript runtime.
+- More exact usage of limit parameter in leaderboard record listings.
+- Include subscriptions in all data deletion from the developer console.
+- Fix the return format of JavaScript runtime account export function.
+- Add user ID to JS runtime wallet operations returned results.
+- Fix a bug which would prevent subscriptions to be stored when validating with persist set to true.
+- If server shutdown is started before the rank cache is populated observe the context cancellation.
+
+## [3.13.1] - 2022-08-18
+### Fixed
+- Push new tag for fix to Docker image releases.
+
+## [3.13.0] - 2022-08-18
+### Added
+- Add subscription validation APIs and runtime functions for Google and Apple.
+- New Chat Messages view in the Nakama Console.
+- New Chat Messages listing and delete endpoints in the Nakama Console API.
+- Add extended filtering options to Nakama Console Matches view.
+- Add additional filter handling to Nakama Console Accounts view.
+- Add "NotificationsDelete" function to all runtimes.
+
+### Changed
+- Improve runtime handling of non-persisted purchases and subscriptions.
+- Improve validation of count multiple matchmaker parameter.
+- Use stricter validation of user email inputs in the Nakama Console.
+- Add next and previous cursor to results of leaderboard and tournament records around owner client operations.
+- Add next and previous cursor to results of leaderboard and tournament records haystack runtime operations.
+- Build with Go 1.19.0 release.
+- Improve signature of JavaScript runtime HMAC SHA256 hash function.
+- Improve signature of JavaScript runtime Base64 encode functions.
+- Improve handling of JavaScript runtime context cancellation.
+- Allow runtime group updates to increase max count beyond 100.
+
 ## [3.12.0] - 2022-05-22
 ### Added
 - Add "FriendsBlock" function to all runtimes.

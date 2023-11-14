@@ -43,6 +43,13 @@ export interface AccountList {
 	users?:Array<ApiUser>
 }
 
+export interface AddGroupUsersRequest {
+  // Users to add/join.
+	ids?:string
+  // Whether it is a join request.
+	join_request?:boolean
+}
+
 export interface AddUserRequest {
   // Email address of the user.
 	email?:string
@@ -64,6 +71,12 @@ export interface ApiEndpointDescriptor {
 export interface ApiEndpointList {
 	endpoints?:Array<ApiEndpointDescriptor>
 	rpc_endpoints?:Array<ApiEndpointDescriptor>
+}
+
+/** Log out a session and invalidate a session token. */
+export interface AuthenticateLogoutRequest {
+  // Session token to log out.
+	token?:string
 }
 
 /** Authenticate a console user with username and password. */
@@ -111,6 +124,11 @@ export interface ConfigWarning {
 export interface ConsoleSession {
   // A session token (JWT) for the console user.
 	token?:string
+}
+
+export interface DeleteChannelMessagesResponse {
+  // Total number of messages deleted.
+	total?:string
 }
 
 /** An export of all information stored for a group. */
@@ -164,8 +182,12 @@ export interface Leaderboard {
 	max_size?:number
   // Additional information stored as a JSON object.
 	metadata?:string
+  // The UNIX time when the tournament is next playable. A computed value.
+	next_reset?:number
   // The operator of the leaderboard
 	operator?:number
+  // The UNIX time when the tournament was last reset. A computed value.
+	prev_reset?:number
   // Reset cron expression.
 	reset_schedule?:string
   // The current number of players in the leaderboard.
@@ -186,6 +208,25 @@ export interface Leaderboard {
 export interface LeaderboardList {
   // The list of leaderboards returned.
 	leaderboards?:Array<Leaderboard>
+}
+
+export enum ListChannelMessagesRequestType {
+  UNKNOWN = 0,
+  ROOM = 1,
+  GROUP = 2,
+  DIRECT = 3,
+}
+
+/** A list of realtime matches, with their node names. */
+export interface MatchList {
+	matches?:Array<MatchListMatch>
+}
+
+export interface MatchListMatch {
+  // The API match
+	api_match?:ApiMatch
+  // The node name
+	node?:string
 }
 
 export interface MatchState {
@@ -353,20 +394,6 @@ export enum UserRole {
   USER_ROLE_READONLY = 4,
 }
 
-/** Environment where the purchase took place */
-export enum ValidatedPurchaseEnvironment {
-  UNKNOWN = 0,
-  SANDBOX = 1,
-  PRODUCTION = 2,
-}
-
-/** Validation Provider */
-export enum ValidatedPurchaseStore {
-  APPLE_APP_STORE = 0,
-  GOOGLE_PLAY_STORE = 1,
-  HUAWEI_APP_GALLERY = 2,
-}
-
 /** An individual update to a user's wallet. */
 export interface WalletLedger {
   // The changeset.
@@ -458,6 +485,18 @@ export interface ApiChannelMessage {
 	user_id_two?:string
   // The username of the message sender, if any.
 	username?:string
+}
+
+/** A list of channel messages, usually a result of a list operation. */
+export interface ApiChannelMessageList {
+  // Cacheable cursor to list newer messages. Durable and designed to be stored, unlike next/prev cursors.
+	cacheable_cursor?:string
+  // A list of messages.
+	messages?:Array<ApiChannelMessage>
+  // The cursor to send when retrieving the next page, if any.
+	next_cursor?:string
+  // The cursor to send when retrieving the previous page, if any.
+	prev_cursor?:string
 }
 
 /** A friend of a user. */
@@ -570,12 +609,6 @@ export interface ApiMatch {
 	tick_rate?:number
 }
 
-/** A list of realtime matches. */
-export interface ApiMatchList {
-  // A number of matches corresponding to a list operation.
-	matches?:Array<ApiMatch>
-}
-
 /** A notification in the server. */
 export interface ApiNotification {
   // Category code for this notification.
@@ -598,7 +631,7 @@ export interface ApiNotification {
 export interface ApiPurchaseList {
   // The cursor to send when retrieving the next page, if any.
 	cursor?:string
-  // The cursor to send when retrieving the next page, if any.
+  // The cursor to send when retrieving the previous page, if any.
 	prev_cursor?:string
   // Stored validated purchases.
 	validated_purchases?:Array<ApiValidatedPurchase>
@@ -636,6 +669,31 @@ export interface ApiStorageObjectAck {
 	user_id?:string
   // The version hash of the object.
 	version?:string
+}
+
+/** Environment where a purchase/subscription took place, */
+export enum ApiStoreEnvironment {
+  UNKNOWN = 0,
+  SANDBOX = 1,
+  PRODUCTION = 2,
+}
+
+/** Validation Provider, */
+export enum ApiStoreProvider {
+  APPLE_APP_STORE = 0,
+  GOOGLE_PLAY_STORE = 1,
+  HUAWEI_APP_GALLERY = 2,
+  XSOLLA = 4,
+}
+
+/** A list of validated subscriptions stored by Nakama. */
+export interface ApiSubscriptionList {
+  // The cursor to send when retrieving the next page, if any.
+	cursor?:string
+  // The cursor to send when retrieving the previous page, if any.
+	prev_cursor?:string
+  // Stored validated subscriptions.
+	validated_subscriptions?:Array<ApiValidatedSubscription>
 }
 
 /** A user in the server. */
@@ -688,24 +746,57 @@ export interface ApiUserGroupList {
 
 /** Validated Purchase stored by Nakama. */
 export interface ApiValidatedPurchase {
-  // UNIX Timestamp when the receipt validation was stored in DB.
+  // Timestamp when the receipt validation was stored in DB.
 	create_time?:string
   // Whether the purchase was done in production or sandbox environment.
-	environment?:ValidatedPurchaseEnvironment
+	environment?:ApiStoreEnvironment
   // Purchase Product ID.
 	product_id?:string
   // Raw provider validation response.
 	provider_response?:string
-  // UNIX Timestamp when the purchase was done.
+  // Timestamp when the purchase was done.
 	purchase_time?:string
+  // Timestamp when the purchase was refunded. Set to UNIX
+	refund_time?:string
   // Whether the purchase had already been validated by Nakama before.
 	seen_before?:boolean
   // Store identifier
-	store?:ValidatedPurchaseStore
+	store?:ApiStoreProvider
   // Purchase Transaction ID.
 	transaction_id?:string
+  // Timestamp when the receipt validation was updated in DB.
+	update_time?:string
+  // Purchase User ID.
+	user_id?:string
+}
+
+export interface ApiValidatedSubscription {
+  // Whether the subscription is currently active or not.
+	active?:boolean
+  // UNIX Timestamp when the receipt validation was stored in DB.
+	create_time?:string
+  // Whether the purchase was done in production or sandbox environment.
+	environment?:ApiStoreEnvironment
+  // Subscription expiration time. The subscription can still be auto-renewed to extend the expiration time further.
+	expiry_time?:string
+  // Purchase Original transaction ID (we only keep track of the original subscription, not subsequent renewals).
+	original_transaction_id?:string
+  // Purchase Product ID.
+	product_id?:string
+  // Raw provider notification body.
+	provider_notification?:string
+  // Raw provider validation response body.
+	provider_response?:string
+  // UNIX Timestamp when the purchase was done.
+	purchase_time?:string
+  // Subscription refund time. If this time is set, the subscription was refunded.
+	refund_time?:string
+  // Store identifier
+	store?:ApiStoreProvider
   // UNIX Timestamp when the receipt validation was updated in DB.
 	update_time?:string
+  // Subscription User ID.
+	user_id?:string
 }
 
 /** A user session associated to a stream, usually through a list operation or a join/leave event. */
@@ -726,8 +817,8 @@ const DEFAULT_HOST = 'http://127.0.0.1:7120';
 const DEFAULT_TIMEOUT_MS = 5000;
 
 export class ConfigParams {
-  host: string
-  timeoutMs: number
+  host!: string
+  timeoutMs!: number
 }
 
 @Injectable({providedIn: 'root'})
@@ -740,13 +831,6 @@ export class ConsoleService {
       timeoutMs: DEFAULT_TIMEOUT_MS,
     };
     this.config = config || defaultConfig;
-  }
-
-  /** Deletes all data */
-  deleteAllData(auth_token: string): Observable<any> {
-		const urlPath = `/v2/console/all`;
-    let params = new HttpParams();
-    return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Delete (non-recorded) all user accounts. */
@@ -763,7 +847,7 @@ export class ConsoleService {
     if (filter) {
       params = params.set('filter', filter);
     }
-    if (tombstones) {
+    if (tombstones || tombstones === false) {
       params = params.set('tombstones', String(tombstones));
     }
     if (cursor) {
@@ -791,7 +875,7 @@ export class ConsoleService {
 		id = encodeURIComponent(String(id))
 		const urlPath = `/v2/console/account/${id}`;
     let params = new HttpParams();
-    if (record_deletion) {
+    if (record_deletion || record_deletion === false) {
       params = params.set('record_deletion', String(record_deletion));
     }
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
@@ -952,6 +1036,13 @@ export class ConsoleService {
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
+  /** Deletes all data */
+  deleteAllData(auth_token: string): Observable<any> {
+		const urlPath = `/v2/console/all`;
+    let params = new HttpParams();
+    return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
   /** API Explorer - list all endpoints */
   listApiEndpoints(auth_token: string): Observable<ApiEndpointList> {
 		const urlPath = `/v2/console/api/endpoints`;
@@ -980,6 +1071,38 @@ export class ConsoleService {
 		const urlPath = `/v2/console/authenticate`;
     let params = new HttpParams();
     return this.httpClient.post<ConsoleSession>(this.config.host + urlPath, body, { params: params })
+  }
+
+  /** Log out a session and invalidate the session token. */
+  authenticateLogout(auth_token: string, body: AuthenticateLogoutRequest): Observable<any> {
+		const urlPath = `/v2/console/authenticate/logout`;
+    let params = new HttpParams();
+    return this.httpClient.post(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /** List channel messages with the selected filter */
+  listChannelMessages(auth_token: string, type?: string, label?: string, group_id?: string, user_id_one?: string, user_id_two?: string, cursor?: string): Observable<ApiChannelMessageList> {
+		const urlPath = `/v2/console/channel`;
+    let params = new HttpParams();
+    if (type) {
+      params = params.set('type', type);
+    }
+    if (label) {
+      params = params.set('label', label);
+    }
+    if (group_id) {
+      params = params.set('group_id', group_id);
+    }
+    if (user_id_one) {
+      params = params.set('user_id_one', user_id_one);
+    }
+    if (user_id_two) {
+      params = params.set('user_id_two', user_id_two);
+    }
+    if (cursor) {
+      params = params.set('cursor', cursor);
+    }
+    return this.httpClient.get<ApiChannelMessageList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Get server config and configuration warnings. */
@@ -1018,6 +1141,14 @@ export class ConsoleService {
 		const urlPath = `/v2/console/group/${group_id}/account/${id}/promote`;
     let params = new HttpParams();
     return this.httpClient.post(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /** Add/join members to a group. */
+  addGroupUsers(auth_token: string, group_id: string, body: AddGroupUsersRequest): Observable<any> {
+		group_id = encodeURIComponent(String(group_id))
+		const urlPath = `/v2/console/group/${group_id}/add`;
+    let params = new HttpParams();
+    return this.httpClient.post(this.config.host + urlPath, body, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Remove a group. */
@@ -1113,13 +1244,13 @@ export class ConsoleService {
   }
 
   /** List ongoing matches */
-  listMatches(auth_token: string, limit?: number, authoritative?: boolean, label?: string, min_size?: number, max_size?: number, query?: string): Observable<ApiMatchList> {
+  listMatches(auth_token: string, limit?: number, authoritative?: boolean, label?: string, min_size?: number, max_size?: number, match_id?: string, query?: string, node?: string): Observable<MatchList> {
 		const urlPath = `/v2/console/match`;
     let params = new HttpParams();
     if (limit) {
       params = params.set('limit', String(limit));
     }
-    if (authoritative) {
+    if (authoritative || authoritative === false) {
       params = params.set('authoritative', String(authoritative));
     }
     if (label) {
@@ -1131,10 +1262,16 @@ export class ConsoleService {
     if (max_size) {
       params = params.set('max_size', String(max_size));
     }
+    if (match_id) {
+      params = params.set('match_id', match_id);
+    }
     if (query) {
       params = params.set('query', query);
     }
-    return this.httpClient.get<ApiMatchList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+    if (node) {
+      params = params.set('node', node);
+    }
+    return this.httpClient.get<MatchList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Get current state of a running match */
@@ -1143,6 +1280,19 @@ export class ConsoleService {
 		const urlPath = `/v2/console/match/${id}/state`;
     let params = new HttpParams();
     return this.httpClient.get<MatchState>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /** Delete messages. */
+  deleteChannelMessages(auth_token: string, before?: string, ids?: Array<string>): Observable<DeleteChannelMessagesResponse> {
+		const urlPath = `/v2/console/message`;
+    let params = new HttpParams();
+    if (before) {
+      params = params.set('before', before);
+    }
+    if (ids) {
+      ids.forEach(e => params = params.append('ids', String(e)))
+    }
+    return this.httpClient.delete<DeleteChannelMessagesResponse>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** List validated purchases */
@@ -1250,6 +1400,22 @@ export class ConsoleService {
 		const urlPath = `/v2/console/storage/${collection}/${key}/${user_id}/${version}`;
     let params = new HttpParams();
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  /** List validated subscriptions */
+  listSubscriptions(auth_token: string, user_id?: string, limit?: number, cursor?: string): Observable<ApiSubscriptionList> {
+		const urlPath = `/v2/console/subscription`;
+    let params = new HttpParams();
+    if (user_id) {
+      params = params.set('user_id', user_id);
+    }
+    if (limit) {
+      params = params.set('limit', String(limit));
+    }
+    if (cursor) {
+      params = params.set('cursor', cursor);
+    }
+    return this.httpClient.get<ApiSubscriptionList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
   /** Delete console user. */

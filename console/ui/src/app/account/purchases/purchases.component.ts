@@ -14,7 +14,7 @@
 
 import {Component, Injectable, OnInit} from '@angular/core';
 import {ActivatedRoute, ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot} from '@angular/router';
-import {ApiPurchaseList, ApiValidatedPurchase, ConsoleService, ValidatedPurchaseStore} from '../../console.service';
+import {ApiPurchaseList, ApiValidatedPurchase, ConsoleService, ApiStoreProvider} from '../../console.service';
 import {Observable} from 'rxjs';
 
 @Component({
@@ -62,14 +62,14 @@ export class PurchasesComponent implements OnInit {
     });
   }
 
-  getStoreText(store: ValidatedPurchaseStore): string {
-    return this.formatStoreText(ValidatedPurchaseStore[store]);
+  getStoreText(store: ApiStoreProvider): string {
+    return this.formatStoreText(ApiStoreProvider[store]);
   }
 
   formatStoreText(label: string): string {
-	if(label === undefined) {
-		return 'unknown';
-	}
+    if(label === undefined) {
+      return "unknown";
+    }
     return label.split('_').map(s => s[0] + s.slice(1).toLowerCase()).join(' ');
   }
 }
