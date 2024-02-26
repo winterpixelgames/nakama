@@ -20,13 +20,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgconn"
 	"log"
 	"math"
 	"sort"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/jackc/pgconn"
 
 	"github.com/heroiclabs/nakama/v3/internal/cronexpr"
 	"github.com/jackc/pgtype"

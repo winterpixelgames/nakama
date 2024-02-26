@@ -17,6 +17,7 @@ package server
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"sync"
 	"time"
 
@@ -33,6 +34,7 @@ type LeaderboardRankCache interface {
 	Delete(leaderboardId string, expiryUnix int64, ownerID uuid.UUID) bool
 	DeleteLeaderboard(leaderboardId string, expiryUnix int64) bool
 	TrimExpired(nowUnix int64) bool
+	LeaderboardIdIsBlacklisted(leaderboardId string) bool
 }
 
 type LeaderboardWithExpiry struct {
@@ -128,7 +130,7 @@ func NewLocalLeaderboardRankCache(ctx context.Context, startupLogger *zap.Logger
 		leaderboards := leaderboardCache.GetAllLeaderboards()
 		cachedLeaderboards := make([]string, 0, len(leaderboards))
 		for _, leaderboard := range leaderboards {
-			if _, ok := cache.blacklistIds[leaderboard.Id]; ok {
+			if cache.LeaderboardIdIsBlacklisted(leaderboard.Id) {
 				startupLogger.Debug("Skip caching leaderboard ranks", zap.String("leaderboard_id", leaderboard.Id))
 				skippedLeaderboards = append(skippedLeaderboards, leaderboard.Id)
 				continue
@@ -258,12 +260,7 @@ func NewLocalLeaderboardRankCache(ctx context.Context, startupLogger *zap.Logger
 }
 
 func (l *LocalLeaderboardRankCache) Get(leaderboardId string, expiryUnix int64, ownerID uuid.UUID) int64 {
-	if l.blacklistAll {
-		// If all rank caching is disabled.
-		return 0
-	}
-	if _, ok := l.blacklistIds[leaderboardId]; ok {
-		// If rank caching is disabled for this particular leaderboard.
+	if l.LeaderboardIdIsBlacklisted(leaderboardId) {
 		return 0
 	}
 
@@ -290,12 +287,7 @@ func (l *LocalLeaderboardRankCache) Get(leaderboardId string, expiryUnix int64, 
 }
 
 func (l *LocalLeaderboardRankCache) Fill(leaderboardId string, expiryUnix int64, records []*api.LeaderboardRecord) {
-	if l.blacklistAll {
-		// If all rank caching is disabled.
-		return
-	}
-	if _, ok := l.blacklistIds[leaderboardId]; ok {
-		// If rank caching is disabled for this particular leaderboard.
+	if l.LeaderboardIdIsBlacklisted(leaderboardId) {
 		return
 	}
 
@@ -330,12 +322,7 @@ func (l *LocalLeaderboardRankCache) Fill(leaderboardId string, expiryUnix int64,
 }
 
 func (l *LocalLeaderboardRankCache) Insert(leaderboardId string, expiryUnix int64, sortOrder int, ownerID uuid.UUID, score, subscore int64) int64 {
-	if l.blacklistAll {
-		// If all rank caching is disabled.
-		return 0
-	}
-	if _, ok := l.blacklistIds[leaderboardId]; ok {
-		// If rank caching is disabled for this particular leaderboard.
+	if l.LeaderboardIdIsBlacklisted(leaderboardId) {
 		return 0
 	}
 
@@ -389,12 +376,7 @@ func (l *LocalLeaderboardRankCache) Insert(leaderboardId string, expiryUnix int6
 }
 
 func (l *LocalLeaderboardRankCache) Delete(leaderboardId string, expiryUnix int64, ownerID uuid.UUID) bool {
-	if l.blacklistAll {
-		// If all rank caching is disabled.
-		return false
-	}
-	if _, ok := l.blacklistIds[leaderboardId]; ok {
-		// If rank caching is disabled for this particular leaderboard.
+	if l.LeaderboardIdIsBlacklisted(leaderboardId) {
 		return false
 	}
 
@@ -424,12 +406,7 @@ func (l *LocalLeaderboardRankCache) Delete(leaderboardId string, expiryUnix int6
 }
 
 func (l *LocalLeaderboardRankCache) DeleteLeaderboard(leaderboardId string, expiryUnix int64) bool {
-	if l.blacklistAll {
-		// If all rank caching is disabled.
-		return false
-	}
-	if _, ok := l.blacklistIds[leaderboardId]; ok {
-		// If rank caching is disabled for this particular leaderboard.
+	if l.LeaderboardIdIsBlacklisted(leaderboardId) {
 		return false
 	}
 
@@ -459,4 +436,27 @@ func (l *LocalLeaderboardRankCache) TrimExpired(nowUnix int64) bool {
 	l.Unlock()
 
 	return true
+}
+
+func (l *LocalLeaderboardRankCache) LeaderboardIdIsBlacklisted(leaderboardId string) bool {
+	if l.blacklistAll {
+		// If all rank caching is disabled.
+		return true
+	}
+
+	if _, ok := l.blacklistIds[leaderboardId]; ok {
+		// If rank caching is disabled for this particular leaderboard.
+		return true
+	}
+
+	for blacklistedId := range l.blacklistIds {
+		if strings.ContainsRune(blacklistedId, '*') {
+			strippedPattern := strings.ReplaceAll(blacklistedId, "*", "")
+			if strings.Contains(leaderboardId, strippedPattern) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
