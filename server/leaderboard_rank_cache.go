@@ -253,7 +253,7 @@ func NewLocalLeaderboardRankCache(ctx context.Context, startupLogger *zap.Logger
 			}
 		}
 
-		startupLogger.Info("Leaderboard rank cache initialization completed successfully", zap.Strings("cached", cachedLeaderboards), zap.Strings("skipped", skippedLeaderboards))
+		startupLogger.Info("Leaderboard rank cache initialization completed successfully", zap.Strings("cached", cachedLeaderboards))
 	}()
 
 	return cache
