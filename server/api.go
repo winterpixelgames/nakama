@@ -517,7 +517,14 @@ func decompressHandler(logger *zap.Logger, h http.Handler) http.HandlerFunc {
 func extractClientAddressFromContext(logger *zap.Logger, ctx context.Context) (string, string) {
 	var clientAddr string
 	md, _ := metadata.FromIncomingContext(ctx)
-	if ips := md.Get("x-forwarded-for"); len(ips) > 0 {
+	if ips := md.Get("cf-connecting-ip"); len(ips) > 0 {
+		clientAddr = strings.Split(ips[0], ",")[0]
+		for _, ip := range ips {
+			if ip != "" {
+				logger.Info("Has cf-connecting-ip header, value: " + ip)
+			}
+		}
+	} else if ips := md.Get("x-forwarded-for"); len(ips) > 0 {
 		// Look for gRPC-Gateway / LB header.
 		clientAddr = strings.Split(ips[0], ",")[0]
 		for _, ip := range ips {
@@ -535,7 +542,10 @@ func extractClientAddressFromContext(logger *zap.Logger, ctx context.Context) (s
 
 func extractClientAddressFromRequest(logger *zap.Logger, r *http.Request) (string, string) {
 	var clientAddr string
-	if ips := r.Header.Get("x-forwarded-for"); len(ips) > 0 {
+	if ips := r.Header.Get("cf-connecting-ip"); len(ips) > 0 {
+		clientAddr = strings.Split(ips, ",")[0]
+		logger.Info("Has cf-connecting-ip header, value: " + ips)
+	} else if ips := r.Header.Get("x-forwarded-for"); len(ips) > 0 {
 		clientAddr = strings.Split(ips, ",")[0]
 		logger.Info("Has X-Forwarded-For header, value: " + ips)
 	} else {
