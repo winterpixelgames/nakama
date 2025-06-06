@@ -520,6 +520,11 @@ func extractClientAddressFromContext(logger *zap.Logger, ctx context.Context) (s
 	if ips := md.Get("x-forwarded-for"); len(ips) > 0 {
 		// Look for gRPC-Gateway / LB header.
 		clientAddr = strings.Split(ips[0], ",")[0]
+		for _, ip := range ips {
+			if ip != "" {
+				logger.Info("Has X-Forwarded-For header, value: " + ip)
+			}
+		}
 	} else if peerInfo, ok := peer.FromContext(ctx); ok {
 		// If missing, try to look up gRPC peer info.
 		clientAddr = peerInfo.Addr.String()
@@ -532,6 +537,7 @@ func extractClientAddressFromRequest(logger *zap.Logger, r *http.Request) (strin
 	var clientAddr string
 	if ips := r.Header.Get("x-forwarded-for"); len(ips) > 0 {
 		clientAddr = strings.Split(ips, ",")[0]
+		logger.Info("Has X-Forwarded-For header, value: " + ips)
 	} else {
 		clientAddr = r.RemoteAddr
 	}
