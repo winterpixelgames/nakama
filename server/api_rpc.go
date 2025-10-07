@@ -218,7 +218,6 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 	var response []byte
 	var responseHeaders map[string]string
 	var httpStatusCode int
-	var errorMessage string
 
 	// Check if result contains custom response headers (for webhooks like EOS)
 	// Expected format: {"_headers": {"Header-Name": "value"}, "_error_code": 16, "_error_message": "msg", "other": "data"}
@@ -239,9 +238,7 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 			// Check if this is an error response
 			if errorCode, ok := resultMap["_error_code"].(float64); ok {
 				httpStatusCode = grpcgw.HTTPStatusFromCode(codes.Code(errorCode))
-				if msg, ok := resultMap["_error_message"].(string); ok {
-					errorMessage = msg
-				}
+				// Also delete the error message field (we don't need to use it)
 				delete(resultMap, "_error_code")
 				delete(resultMap, "_error_message")
 			}
@@ -297,14 +294,9 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 	// Write response with appropriate status code
 	if httpStatusCode != 0 {
 		// This is an error response with custom headers
+		// The response body was already signed in the RPC function, so send it as-is
 		w.WriteHeader(httpStatusCode)
-		if errorMessage != "" {
-			// Include error message in response
-			errorResp, _ := json.Marshal(map[string]interface{}{"error": errorMessage, "message": errorMessage, "code": httpStatusCode})
-			sentBytes, err = w.Write(errorResp)
-		} else {
-			sentBytes, err = w.Write(response)
-		}
+		sentBytes, err = w.Write(response)
 	} else {
 		// Normal success response
 		w.WriteHeader(http.StatusOK)
