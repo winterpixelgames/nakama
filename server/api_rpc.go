@@ -237,7 +237,12 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 
 			// Check if this is an error response
 			if errorCode, ok := resultMap["_error_code"].(float64); ok {
-				httpStatusCode = grpcgw.HTTPStatusFromCode(codes.Code(errorCode))
+				// Special case: FailedPrecondition (9) should return 428 Precondition Required for EOS webhook
+				if codes.Code(errorCode) == codes.FailedPrecondition {
+					httpStatusCode = 428 // http.StatusPreconditionRequired
+				} else {
+					httpStatusCode = grpcgw.HTTPStatusFromCode(codes.Code(errorCode))
+				}
 				// Also delete the error message field (we don't need to use it)
 				delete(resultMap, "_error_code")
 				delete(resultMap, "_error_message")
