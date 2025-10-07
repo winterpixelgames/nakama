@@ -216,6 +216,29 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 
 	// Return the successful result.
 	var response []byte
+	var responseHeaders map[string]string
+
+	// Check if result contains custom response headers (for webhooks like EOS)
+	// Expected format: {"_headers": {"Header-Name": "value"}, "other": "data"}
+	if unwrap && result != "" {
+		var resultMap map[string]interface{}
+		if err := json.Unmarshal([]byte(result), &resultMap); err == nil {
+			if headers, ok := resultMap["_headers"].(map[string]interface{}); ok {
+				responseHeaders = make(map[string]string)
+				for k, v := range headers {
+					if strVal, ok := v.(string); ok {
+						responseHeaders[k] = strVal
+					}
+				}
+				// Remove _headers from the response
+				delete(resultMap, "_headers")
+				if updatedResult, err := json.Marshal(resultMap); err == nil {
+					result = string(updatedResult)
+				}
+			}
+		}
+	}
+
 	if !unwrap {
 		// GRPC Gateway equivalent behaviour.
 		var err error
@@ -235,6 +258,14 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 		// "Unwrapped" response.
 		response = []byte(result)
 	}
+
+	// Set custom response headers if present
+	if responseHeaders != nil {
+		for k, v := range responseHeaders {
+			w.Header().Set(k, v)
+		}
+	}
+
 	if unwrap {
 		if contentType := r.Header["Content-Type"]; len(contentType) > 0 {
 			// Assume the request input content type is the same as the expected response.
