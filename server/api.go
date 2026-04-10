@@ -517,7 +517,6 @@ func decompressHandler(logger *zap.Logger, h http.Handler) http.HandlerFunc {
 func extractClientAddressFromContext(logger *zap.Logger, ctx context.Context) (string, string) {
 	var clientAddr string
 	md, _ := metadata.FromIncomingContext(ctx)
-	logger.Info("extractClientAddressFromContext: dumping all incoming metadata headers", zap.Any("metadata", md))
 	if ips := md.Get("cf-connecting-ip"); len(ips) > 0 {
 		clientAddr = strings.Split(ips[0], ",")[0]
 	} else if ips := md.Get("x-forwarded-for"); len(ips) > 0 {
@@ -533,7 +532,6 @@ func extractClientAddressFromContext(logger *zap.Logger, ctx context.Context) (s
 
 func extractClientAddressFromRequest(logger *zap.Logger, r *http.Request) (string, string) {
 	var clientAddr string
-	logger.Info("extractClientAddressFromRequest: dumping all request headers", zap.Any("headers", r.Header), zap.String("remote_addr", r.RemoteAddr))
 	if ips := r.Header.Get("cf-connecting-ip"); len(ips) > 0 {
 		clientAddr = strings.Split(ips, ",")[0]
 	} else if ips := r.Header.Get("x-forwarded-for"); len(ips) > 0 {
