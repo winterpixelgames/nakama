@@ -149,6 +149,15 @@ func StartApiServer(logger *zap.Logger, startupLogger *zap.Logger, db *sql.DB, p
 	// Should start after GRPC server itself because RegisterNakamaHandlerFromEndpoint below tries to dial GRPC.
 	ctx := context.Background()
 	grpcGateway := grpcgw.NewServeMux(
+		grpcgw.WithIncomingHeaderMatcher(func(key string) (string, bool) {
+			// Forward Cf-Connecting-Ip through as a bare (un-prefixed) gRPC metadata
+			// key so extractClientAddressFromContext can read it. DefaultHeaderMatcher
+			// would otherwise drop it since it is not a permanent IANA header.
+			if strings.EqualFold(key, "Cf-Connecting-Ip") {
+				return "cf-connecting-ip", true
+			}
+			return grpcgw.DefaultHeaderMatcher(key)
+		}),
 		grpcgw.WithMetadata(func(ctx context.Context, r *http.Request) metadata.MD {
 			// For RPC GET operations pass through any custom query parameters.
 			if r.Method != "GET" || !strings.HasPrefix(r.URL.Path, "/v2/rpc/") {
