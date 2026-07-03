@@ -216,6 +216,45 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 
 	// Return the successful result.
 	var response []byte
+	var responseHeaders map[string]string
+	var httpStatusCode int
+
+	// Check if result contains custom response headers (for webhooks like EOS)
+	// Expected format: {"_headers": {"Header-Name": "value"}, "_error_code": 16, "_error_message": "msg", "other": "data"}
+	if unwrap && result != "" {
+		var resultMap map[string]interface{}
+		if err := json.Unmarshal([]byte(result), &resultMap); err == nil {
+			// Extract custom headers
+			if headers, ok := resultMap["_headers"].(map[string]interface{}); ok {
+				responseHeaders = make(map[string]string)
+				for k, v := range headers {
+					if strVal, ok := v.(string); ok {
+						responseHeaders[k] = strVal
+					}
+				}
+				delete(resultMap, "_headers")
+			}
+
+			// Check if this is an error response
+			if errorCode, ok := resultMap["_error_code"].(float64); ok {
+				// Special case: FailedPrecondition (9) should return 428 Precondition Required for EOS webhook
+				if codes.Code(errorCode) == codes.FailedPrecondition {
+					httpStatusCode = 428 // http.StatusPreconditionRequired
+				} else {
+					httpStatusCode = grpcgw.HTTPStatusFromCode(codes.Code(errorCode))
+				}
+				// Also delete the error message field (we don't need to use it)
+				delete(resultMap, "_error_code")
+				delete(resultMap, "_error_message")
+			}
+
+			// Re-marshal the cleaned result
+			if updatedResult, err := json.Marshal(resultMap); err == nil {
+				result = string(updatedResult)
+			}
+		}
+	}
+
 	if !unwrap {
 		// GRPC Gateway equivalent behaviour.
 		var err error
@@ -235,6 +274,15 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 		// "Unwrapped" response.
 		response = []byte(result)
 	}
+
+	// Set custom response headers if present
+	if responseHeaders != nil {
+		for k, v := range responseHeaders {
+			w.Header().Set(k, v)
+		}
+	}
+
+	// Set content type
 	if unwrap {
 		if contentType := r.Header["Content-Type"]; len(contentType) > 0 {
 			// Assume the request input content type is the same as the expected response.
@@ -247,13 +295,24 @@ func (s *ApiServer) httpFunc(w http.ResponseWriter, r *http.Request, unwrap bool
 		// Fall back to default response content type application/json.
 		w.Header().Set("content-type", "application/json")
 	}
-	w.WriteHeader(http.StatusOK)
-	sentBytes, err = w.Write(response)
+
+	// Write response with appropriate status code
+	if httpStatusCode != 0 {
+		// This is an error response with custom headers
+		// The response body was already signed in the RPC function, so send it as-is
+		w.WriteHeader(httpStatusCode)
+		sentBytes, err = w.Write(response)
+	} else {
+		// Normal success response
+		w.WriteHeader(http.StatusOK)
+		sentBytes, err = w.Write(response)
+		success = true
+	}
+
 	if err != nil {
 		s.logger.Debug("Error writing response to client", zap.Error(err))
 		return
 	}
-	success = true
 }
 
 func (s *ApiServer) RpcFuncHttp(w http.ResponseWriter, r *http.Request) {
