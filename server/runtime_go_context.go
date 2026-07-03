@@ -18,7 +18,22 @@ import (
 	"context"
 
 	"github.com/heroiclabs/nakama-common/runtime"
+	"google.golang.org/grpc/metadata"
 )
+
+// extractHeadersFromGrpcMetadata extracts HTTP headers from gRPC metadata on the context.
+// This is used for before-hooks where RUNTIME_CTX_HEADERS is not populated by the caller.
+func extractHeadersFromGrpcMetadata(ctx context.Context) map[string][]string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil
+	}
+	headers := make(map[string][]string, len(md))
+	for k, v := range md {
+		headers[k] = v
+	}
+	return headers
+}
 
 func NewRuntimeGoContext(ctx context.Context, node, version string, env map[string]string, mode RuntimeExecutionMode, headers, queryParams map[string][]string, sessionExpiry int64, userID, username string, vars map[string]string, sessionID, clientIP, clientPort, lang string) context.Context {
 	ctx = context.WithValue(ctx, runtime.RUNTIME_CTX_ENV, env)

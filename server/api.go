@@ -149,6 +149,15 @@ func StartApiServer(logger *zap.Logger, startupLogger *zap.Logger, db *sql.DB, p
 	// Should start after GRPC server itself because RegisterNakamaHandlerFromEndpoint below tries to dial GRPC.
 	ctx := context.Background()
 	grpcGateway := grpcgw.NewServeMux(
+		grpcgw.WithIncomingHeaderMatcher(func(key string) (string, bool) {
+			// Forward Cf-Connecting-Ip through as a bare (un-prefixed) gRPC metadata
+			// key so extractClientAddressFromContext can read it. DefaultHeaderMatcher
+			// would otherwise drop it since it is not a permanent IANA header.
+			if strings.EqualFold(key, "Cf-Connecting-Ip") {
+				return "cf-connecting-ip", true
+			}
+			return grpcgw.DefaultHeaderMatcher(key)
+		}),
 		grpcgw.WithMetadata(func(ctx context.Context, r *http.Request) metadata.MD {
 			// For RPC GET operations pass through any custom query parameters.
 			if r.Method != "GET" || !strings.HasPrefix(r.URL.Path, "/v2/rpc/") {
@@ -517,10 +526,20 @@ func decompressHandler(logger *zap.Logger, h http.Handler) http.HandlerFunc {
 func extractClientAddressFromContext(logger *zap.Logger, ctx context.Context) (string, string) {
 	var clientAddr string
 	md, _ := metadata.FromIncomingContext(ctx)
+	//logger.Info("extractClientAddressFromContext: dumping all incoming metadata headers", zap.Any("metadata", md))
+	// Note: when requests arrive through grpc-gateway (HTTP -> gRPC), the default
+	// header matcher forwards non-permanent HTTP headers into the gRPC metadata
+	// with a "grpcgateway-" prefix. So for HTTP-originated requests, cf-connecting-ip
+	// will appear as "grpcgateway-cf-connecting-ip" in the metadata, not the bare name.
+	// Check both forms so we handle direct gRPC clients AND grpc-gateway clients.
 	if ips := md.Get("cf-connecting-ip"); len(ips) > 0 {
+		clientAddr = strings.Split(ips[0], ",")[0]
+	} else if ips := md.Get("grpcgateway-cf-connecting-ip"); len(ips) > 0 {
 		clientAddr = strings.Split(ips[0], ",")[0]
 	} else if ips := md.Get("x-forwarded-for"); len(ips) > 0 {
 		// Look for gRPC-Gateway / LB header.
+		clientAddr = strings.Split(ips[0], ",")[0]
+	} else if ips := md.Get("grpcgateway-x-forwarded-for"); len(ips) > 0 {
 		clientAddr = strings.Split(ips[0], ",")[0]
 	} else if peerInfo, ok := peer.FromContext(ctx); ok {
 		// If missing, try to look up gRPC peer info.
@@ -534,7 +553,11 @@ func extractClientAddressFromRequest(logger *zap.Logger, r *http.Request) (strin
 	var clientAddr string
 	if ips := r.Header.Get("cf-connecting-ip"); len(ips) > 0 {
 		clientAddr = strings.Split(ips, ",")[0]
+	} else if ips := r.Header.Get("grpcgateway-cf-connecting-ip"); len(ips) > 0 {
+		clientAddr = strings.Split(ips, ",")[0]
 	} else if ips := r.Header.Get("x-forwarded-for"); len(ips) > 0 {
+		clientAddr = strings.Split(ips, ",")[0]
+	} else if ips := r.Header.Get("grpcgateway-x-forwarded-for"); len(ips) > 0 {
 		clientAddr = strings.Split(ips, ",")[0]
 	} else {
 		clientAddr = r.RemoteAddr
